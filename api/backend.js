@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-    // Cabeçalhos que a API oficial exige para responder corretamente
     const API_HEADERS = {
         'Ocp-Apim-Subscription-Key': 'd701a2043aa24d7ebb37e9adf60d043b',
         'X-Product-Name': 'SalaDoFuturo',
@@ -12,9 +11,9 @@ export default async function handler(req, res) {
     const method = req.method;
 
     try {
-        // ROTA DE LOGIN
+        // ROTA DE LOGIN CORRIGIDA
         if (path === '/api/login' && method === 'POST') {
-            const response = await fetch('https://sedintegracoes.educacao.sp.gov.br/saladofuturobffapi/credenciais/api/Login', {
+            const response = await fetch('https://sedintegracoes.educacao.sp.gov.br/saladofuturobffapi/credenciais/api/LoginCompletoToken', {
                 method: 'POST',
                 headers: API_HEADERS,
                 body: JSON.stringify(req.body)
@@ -23,7 +22,7 @@ export default async function handler(req, res) {
             return res.status(response.status).json(data);
         }
 
-        // ROTA DE LISTAR LIVROS
+        // ROTA DE LISTAR LIVROS (Mantida)
         if (path === '/api/books' && method === 'GET') {
             const response = await fetch('https://prod-apistudent.elefanteletrado.com.br/v1/library/book/readings', {
                 method: 'GET',
@@ -36,22 +35,9 @@ export default async function handler(req, res) {
             return res.status(response.status).json(data);
         }
 
-        // ROTA PARA COMPLETAR LIVRO
-        if (path.includes('/complete') && method === 'POST') {
-            const response = await fetch('https://prod-apistudent.elefanteletrado.com.br/v1/library/book/readings/complete', {
-                method: 'POST',
-                headers: { 
-                    ...API_HEADERS, 
-                    'Authorization': req.headers.authorization 
-                }
-            });
-            const data = await response.json();
-            return res.status(response.status).json(data);
-        }
-
         return res.status(404).json({ error: 'Rota não encontrada' });
     } catch (error) {
         console.error('Erro no Backend:', error);
-        return res.status(500).json({ error: 'Erro interno no servidor', details: error.message });
+        return res.status(500).json({ error: 'Erro interno', details: error.message });
     }
 }
