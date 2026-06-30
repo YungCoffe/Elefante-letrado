@@ -8,95 +8,58 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); min-height: 100vh; color: #fff; display: flex; justify-content: center; align-items: center; padding: 20px; }
         .container { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border-radius: 20px; padding: 40px; width: 100%; max-width: 500px; border: 1px solid rgba(255,255,255,0.1); }
-        h1 { text-align: center; margin-bottom: 10px; font-size: 28px; }
-        h1 span { color: #e94560; }
-        .subtitle { text-align: center; color: #aaa; margin-bottom: 30px; font-size: 14px; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-size: 14px; color: #ddd; }
-        input { width: 100%; padding: 14px; border: none; border-radius: 12px; background: rgba(255,255,255,0.1); color: #fff; font-size: 16px; outline: none; }
-        .row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; }
-        button { width: 100%; padding: 16px; border: none; border-radius: 12px; background: #e94560; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        h1 { text-align: center; margin-bottom: 20px; font-size: 28px; }
+        .form-group { margin-bottom: 15px; }
+        input { width: 100%; padding: 14px; border-radius: 12px; border: none; background: rgba(255,255,255,0.1); color: #fff; margin-bottom: 10px; }
+        button { width: 100%; padding: 16px; border-radius: 12px; border: none; background: #e94560; color: #fff; font-weight: 600; cursor: pointer; }
         .books-section { margin-top: 30px; display: none; }
-        .book-card { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .btn-small { padding: 8px 14px; font-size: 12px; border-radius: 8px; border: none; cursor: pointer; background: #00d9ff; color: #000; }
-        .status { text-align: center; padding: 12px; border-radius: 10px; margin-top: 15px; font-size: 14px; display: none; }
-        .status.success { background: rgba(0,255,0,0.1); color: #00ff88; display: block; }
-        .status.error { background: rgba(255,0,0,0.1); color: #ff4444; display: block; }
-        .status.loading { background: rgba(255,165,0,0.1); color: #ffa500; display: block; }
+        .book-card { background: rgba(255,255,255,0.05); padding: 15px; margin-bottom: 10px; border-radius: 10px; display: flex; justify-content: space-between; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🐘 <span>Elefante</span> Letrado</h1>
-        
+        <h1>🐘 Elefante Letrado</h1>
         <div id="loginForm">
-            <div class="row">
-                <input type="text" id="ra" placeholder="RA" maxlength="9">
-                <input type="text" id="digito" placeholder="Dígito" maxlength="1">
-                <input type="text" id="uf" value="SP" readonly>
-            </div>
-            <input type="password" id="senha" placeholder="Senha" style="margin-top:20px;">
+            <input type="text" id="ra" placeholder="RA (9 dígitos)" maxlength="9">
+            <input type="text" id="digito" placeholder="Dígito" maxlength="1">
+            <input type="password" id="senha" placeholder="Senha">
             <button onclick="login()" id="btnLogin">Entrar</button>
         </div>
-
         <div id="booksSection" class="books-section">
-            <h2 style="margin-bottom:15px;font-size:18px;">📚 Seus Livros</h2>
             <div id="booksList"></div>
         </div>
-        <div id="status" class="status"></div>
     </div>
 
     <script>
-        // API_URL vazia faz com que o fetch chame o próprio domínio (Vercel)
         const API_URL = ''; 
-        let token = localStorage.getItem('elefante_token');
-
-        if (token) {
-            document.getElementById('loginForm').style.display = 'none';
-            loadBooks();
-        }
-
         async function login() {
-            try {
-                const res = await fetch(`${API_URL}/api/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        user: document.getElementById('ra').value + document.getElementById('digito').value + "SP",
-                        senha: document.getElementById('senha').value
-                    })
-                });
-                const data = await res.json();
-                if (data.token || data.access_token) {
-                    token = data.token || data.access_token;
-                    localStorage.setItem('elefante_token', token);
-                    loadBooks();
-                }
-            } catch (err) { alert('Erro no login'); }
+            const res = await fetch(`${API_URL}/api/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user: document.getElementById('ra').value + document.getElementById('digito').value + "SP",
+                    senha: document.getElementById('senha').value
+                })
+            });
+            const data = await res.json();
+            if (data.token || data.accessToken) {
+                localStorage.setItem('elefante_token', data.token || data.accessToken);
+                loadBooks();
+            } else { alert('Erro no login'); }
         }
 
         async function loadBooks() {
             document.getElementById('loginForm').style.display = 'none';
+            const res = await fetch(`${API_URL}/api/books`, {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('elefante_token') }
+            });
+            const data = await res.json();
+            const books = data.readings || data || [];
+            const list = document.getElementById('booksList');
             document.getElementById('booksSection').style.display = 'block';
-            
-            try {
-                const res = await fetch(`${API_URL}/api/books`, {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-                const data = await res.json();
-                const books = data.readings || data || []; // Ajustado para pegar a lista
-                
-                const list = document.getElementById('booksList');
-                list.innerHTML = '';
-                books.forEach(book => {
-                    list.innerHTML += `
-                        <div class="book-card">
-                            <h3>${book.title || 'Livro'}</h3>
-                            <button class="btn-small">Ler</button>
-                        </div>
-                    `;
-                });
-            } catch (err) { alert('Erro ao carregar livros'); }
+            books.forEach(b => {
+                list.innerHTML += `<div class="book-card"><h3>${b.title || 'Livro'}</h3></div>`;
+            });
         }
     </script>
 </body>
