@@ -22,8 +22,6 @@
     <div id="actionPanel" style="display: none; text-align: center;">
         <h3>Menu</h3>
         <button onclick="buscarDados('readings')">Listar Livros</button>
-        <button onclick="buscarDados('discover')">Listar Descobertas</button>
-        <button onclick="buscarDados('quiz')">Listar Quizzes</button>
     </div>
 
     <pre id="output"></pre>
@@ -44,8 +42,8 @@
                 localStorage.setItem('elefante_token', token);
                 document.getElementById('loginCard').style.display = 'none';
                 document.getElementById('actionPanel').style.display = 'block';
-                alert('Logado com sucesso!');
-            } else { alert('Erro no login: ' + (data.error || 'Dados inválidos')); }
+                alert('Logado!');
+            } else { alert('Erro no login'); }
         }
 
         async function buscarDados(tipo) {
@@ -54,11 +52,16 @@
             output.style.display = 'block';
             output.innerText = "Carregando...";
 
-            const res = await fetch(`/api/books?type=${tipo}`, {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-            const data = await res.json();
-            output.innerText = JSON.stringify(data, null, 2);
+            try {
+                const res = await fetch(`/api/books?type=${tipo}`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const text = await res.text(); // Pega o texto bruto primeiro
+                const data = JSON.parse(text); // Tenta converter para JSON
+                output.innerText = JSON.stringify(data, null, 2);
+            } catch (err) {
+                output.innerText = "Erro ao processar resposta da API.";
+            }
         }
     </script>
 </body>
