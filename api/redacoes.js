@@ -1,23 +1,14 @@
 export default async function handler(req, res) {
-    if (req.method !== 'PUT') return res.status(405).end();
-    const { taskId, answerId, texto, executedOn } = req.body;
-    const token = process.env.X_API_KEY;
+    const token = req.headers['authorization'];
 
     try {
-        const response = await fetch(`https://edusp-api.ip.tv/tms/task/${taskId}/answer/${answerId}`, {
-            method: 'PUT',
-            headers: { 'x-api-key': token, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                status: "draft",
-                answers: { content: texto },
-                accessed_on: "room",
-                executed_on: executedOn,
-                duration: 10.0
-            })
+        const response = await fetch('https://edusp-api.ip.tv/tms/task/todo?is_essay=true&answer_statuses=draft&answer_statuses=pending', {
+            method: 'GET',
+            headers: { 'x-api-key': token, 'accept': 'application/json' }
         });
         const data = await response.json();
         res.status(200).json(data);
     } catch (error) {
-        res.status(500).json({ error: 'Erro ao salvar' });
+        res.status(500).json({ error: 'Erro ao buscar redações' });
     }
 }
