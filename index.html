@@ -36,7 +36,6 @@
             });
             const data = await res.json();
             
-            // Procura o token em qualquer lugar da resposta (data, accessToken, token)
             const token = data.accessToken || data.token || data.data?.token;
 
             if (token) {
@@ -45,8 +44,7 @@
                 document.getElementById('actionPanel').style.display = 'block';
                 alert('Logado com sucesso!');
             } else {
-                alert('Erro: Token não encontrado. Verifique o console.');
-                console.log("Resposta da API:", data);
+                alert('Erro: Token não encontrado.');
             }
         }
 
@@ -58,15 +56,11 @@
 
             try {
                 const res = await fetch('/api/books?type=readings', {
-                    headers: { 'Authorization': 'Bearer ' + token }
+                    headers: { 'Authorization': token }
                 });
                 
-                if (res.status === 401) {
-                    output.innerText = "Erro 401: Token inválido ou expirado. Tente logar novamente.";
-                } else {
-                    const data = await res.json();
-                    output.innerText = JSON.stringify(data, null, 2);
-                }
+                const data = await res.json();
+                output.innerText = JSON.stringify(data, null, 2);
             } catch (err) {
                 output.innerText = "Erro ao buscar dados.";
             }
