@@ -1,13 +1,8 @@
 export default async function handler(req, res) {
-    // 1. Pegar o token
     const token = req.headers.authorization;
-
-    if (!token) {
-        return res.status(401).json({ error: 'Token ausente' });
-    }
+    if (!token) return res.status(401).json({ error: 'Token ausente' });
 
     try {
-        // 2. Fazer a requisição para a API oficial
         const response = await fetch('https://prod-apistudent.elefanteletrado.com.br/v1/library/book/readings', {
             method: 'GET',
             headers: {
@@ -16,15 +11,14 @@ export default async function handler(req, res) {
             }
         });
 
-        // 3. Obter os dados
+        // Captura o status real da resposta
+        if (!response.ok) {
+            return res.status(response.status).json({ error: 'Erro na API: ' + response.status });
+        }
+
         const data = await response.json();
-        
-        // 4. Retornar os dados
         return res.status(200).json(data);
-        
     } catch (error) {
-        // Log para debug
-        console.error("Erro capturado:", error);
-        return res.status(500).json({ error: 'Falha na comunicação com a API externa' });
+        return res.status(500).json({ error: 'Erro no servidor: ' + error.message });
     }
 }
