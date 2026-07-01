@@ -7,7 +7,8 @@
         body { font-family: sans-serif; background: #0f172a; color: #fff; display: flex; flex-direction: column; align-items: center; padding: 20px; }
         .card { background: #1e293b; padding: 20px; border-radius: 12px; width: 100%; max-width: 350px; }
         input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: none; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background: #38bdf8; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button { width: 100%; padding: 10px; background: #38bdf8; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        #output { margin-top: 20px; width: 100%; max-width: 600px; background: #1e293b; padding: 15px; border-radius: 8px; font-size: 0.8rem; overflow-x: auto; display: none; }
     </style>
 </head>
 <body>
@@ -17,6 +18,15 @@
         <input type="password" id="senha" placeholder="Senha">
         <button onclick="fazerLogin()">Entrar</button>
     </div>
+
+    <div id="actionPanel" style="display: none; text-align: center;">
+        <h3>Menu</h3>
+        <button onclick="buscarDados('readings')">Listar Livros</button>
+        <button onclick="buscarDados('discover')">Listar Descobertas</button>
+        <button onclick="buscarDados('quiz')">Listar Quizzes</button>
+    </div>
+
+    <pre id="output"></pre>
 
     <script>
         async function fazerLogin() {
@@ -28,19 +38,27 @@
                 body: JSON.stringify({ user, senha })
             });
             const data = await res.json();
-            if (data.token || data.accessToken) {
-                localStorage.setItem('elefante_token', data.token || data.accessToken);
-                alert('Logado! Agora você pode buscar livros ou quizzes.');
-            } else { alert('Erro no login'); }
+            const token = data.token || data.accessToken;
+
+            if (token) {
+                localStorage.setItem('elefante_token', token);
+                document.getElementById('loginCard').style.display = 'none';
+                document.getElementById('actionPanel').style.display = 'block';
+                alert('Logado com sucesso!');
+            } else { alert('Erro no login: ' + (data.error || 'Dados inválidos')); }
         }
 
-        // Exemplo de como buscar dados após logar:
         async function buscarDados(tipo) {
             const token = localStorage.getItem('elefante_token');
+            const output = document.getElementById('output');
+            output.style.display = 'block';
+            output.innerText = "Carregando...";
+
             const res = await fetch(`/api/books?type=${tipo}`, {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
-            console.log(await res.json());
+            const data = await res.json();
+            output.innerText = JSON.stringify(data, null, 2);
         }
     </script>
 </body>
