@@ -2,70 +2,51 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Elefante Leitor</title>
+    <title>Yung Redação - Envio</title>
     <style>
-        body { font-family: sans-serif; background: #0f172a; color: #fff; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .card { background: #1e293b; padding: 20px; border-radius: 12px; width: 100%; max-width: 350px; }
-        input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: none; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background: #38bdf8; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        #output { margin-top: 20px; width: 100%; max-width: 600px; background: #1e293b; padding: 15px; border-radius: 8px; font-size: 0.8rem; white-space: pre-wrap; display: none; }
+        body { font-family: sans-serif; background: #0f172a; color: #fff; padding: 20px; }
+        .card { background: #1e293b; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+        textarea { width: 100%; height: 200px; margin: 10px 0; border-radius: 6px; }
+        select, button { width: 100%; padding: 10px; margin-top: 10px; }
     </style>
 </head>
 <body>
-    <div class="card" id="loginCard">
-        <h2>Login</h2>
+    <div id="login" class="card">
         <input type="text" id="user" placeholder="Usuário">
         <input type="password" id="senha" placeholder="Senha">
         <button onclick="fazerLogin()">Entrar</button>
     </div>
 
-    <div id="actionPanel" style="display: none; text-align: center;">
-        <button onclick="buscarLivros()">Listar Livros</button>
+    <div id="painel" class="card" style="display:none;">
+        <select id="listaRedacoes"></select>
+        <textarea id="texto" placeholder="Cole sua redação aqui..."></textarea>
+        <button onclick="enviarRascunho()">Enviar para Rascunhos</button>
     </div>
 
-    <pre id="output"></pre>
-
     <script>
-        async function fazerLogin() {
-            const user = document.getElementById('user').value;
-            const senha = document.getElementById('senha').value;
-            
-            const res = await fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user, senha })
-            });
-            
-            const responseData = await res.json();
-            // Captura do token conforme visto em Screenshot_20260701-094257.jpg
-            const token = responseData.data;
+        let tokenGlobal = "";
 
-            if (token) {
-                localStorage.setItem('elefante_token', token);
-                document.getElementById('loginCard').style.display = 'none';
-                document.getElementById('actionPanel').style.display = 'block';
-                alert('Autenticado com sucesso!');
-            } else {
-                alert('Erro: Token não encontrado.');
-            }
+        async function fazerLogin() {
+            // ... (mesma lógica de login que você já tem)
+            // Após logar, chame listarRedacoes()
         }
 
-        async function buscarLivros() {
-            const token = localStorage.getItem('elefante_token');
-            const output = document.getElementById('output');
-            output.style.display = 'block';
-            output.innerText = "Carregando...";
+        async function listarRedacoes() {
+            const res = await fetch('/api/redacoes', { headers: { 'Authorization': tokenGlobal } });
+            const data = await res.json();
+            // Preencher o select id="listaRedacoes" com os dados da API
+        }
 
-            try {
-                const res = await fetch('/api/books?type=readings', {
-                    headers: { 'Authorization': token }
-                });
-                
-                const data = await res.json();
-                output.innerText = JSON.stringify(data, null, 2);
-            } catch (err) {
-                output.innerText = "Erro ao buscar dados.";
-            }
+        async function enviarRascunho() {
+            const idRedacao = document.getElementById('listaRedacoes').value;
+            const texto = document.getElementById('texto').value;
+
+            const res = await fetch('/api/salvar-rascunho', {
+                method: 'POST',
+                headers: { 'Authorization': tokenGlobal, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idRedacao, texto })
+            });
+            alert(res.ok ? "Rascunho salvo com sucesso!" : "Erro ao enviar.");
         }
     </script>
 </body>
