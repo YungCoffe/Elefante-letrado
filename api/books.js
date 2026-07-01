@@ -1,11 +1,12 @@
 export default async function handler(req, res) {
-    const { type, bookId, chapterId } = req.query;
+    const { type } = req.query;
     const authHeader = req.headers.authorization;
 
-    let url = 'https://prod-apistudent.elefanteletrado.com.br/v1/library/book/readings';
-    if (type === 'discover') url = 'https://prod-apistudent.elefanteletrado.com.br/v1/library/discover/';
-    if (type === 'quiz') url = 'https://prod-apistudent.elefanteletrado.com.br/v1/student/books/quiz/list';
-    if (type === 'book_detail' && bookId && chapterId) url = `https://prod-apistudent.elefanteletrado.com.br/v1/library/books/${bookId}/${chapterId}`;
+    if (!authHeader) {
+        return res.status(401).json({ error: 'Token ausente' });
+    }
+
+    const url = 'https://prod-apistudent.elefanteletrado.com.br/v1/library/book/readings';
 
     try {
         const response = await fetch(url, {
@@ -13,13 +14,20 @@ export default async function handler(req, res) {
             headers: {
                 'Authorization': authHeader,
                 'Origin': 'https://em.elefanteletrado.com.br',
-                'Referer': 'https://em.elefanteletrado.com.br/',
-                'Accept': 'application/json'
+                'Referer': 'https://em.elefanteletrado.com.br/library/panel',
+                'Accept': 'application/json, text/plain, */*'
             }
         });
+
+        // Se a API retornar erro, captura o status
+        if (!response.ok) {
+            return res.status(response.status).json({ error: 'Erro na API remota: ' + response.status });
+        }
+
         const data = await response.json();
-        return res.status(response.status).json(data);
+        return res.status(200).json(data);
     } catch (error) {
-        return res.status(500).json({ error: error.message });
+        // Isso vai capturar o motivo exato do Erro 500
+        return res.status(500).json({ error: 'Erro no servidor: ' + error.message });
     }
 }
