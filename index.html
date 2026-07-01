@@ -2,81 +2,45 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Elefante Letrado</title>
+    <title>Elefante Letrado - App</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #fff; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .card { background: #1e293b; padding: 2rem; border-radius: 16px; width: 100%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        h2 { text-align: center; margin-bottom: 1.5rem; color: #38bdf8; }
-        .input-group { position: relative; margin-bottom: 1rem; }
-        input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #fff; box-sizing: border-box; }
-        .toggle-password { position: absolute; right: 10px; top: 12px; cursor: pointer; color: #94a3b8; font-size: 12px; }
-        button { width: 100%; padding: 12px; border-radius: 8px; border: none; background: #38bdf8; color: #0f172a; font-weight: bold; cursor: pointer; margin-top: 1rem; }
-        #booksSection { margin-top: 20px; width: 100%; max-width: 350px; display: none; }
-        .book-card { background: #334155; padding: 12px; margin-bottom: 8px; border-radius: 8px; font-size: 0.9rem; }
+        body { font-family: sans-serif; background: #0f172a; color: #fff; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .card { background: #1e293b; padding: 20px; border-radius: 12px; width: 100%; max-width: 350px; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: none; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #38bdf8; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="card" id="loginCard">
         <h2>🐘 Login</h2>
-        <div class="input-group">
-            <input type="text" id="user" placeholder="Ex: 1234567890sp">
-        </div>
-        <div class="input-group">
-            <input type="password" id="senha" placeholder="Senha">
-            <span class="toggle-password" onclick="toggleSenha()">👁️</span>
-        </div>
-        <button onclick="login()">Entrar</button>
-    </div>
-
-    <div id="booksSection">
-        <h3 style="color: #38bdf8;">Seus Livros</h3>
-        <div id="booksList"></div>
+        <input type="text" id="user" placeholder="1234567890sp">
+        <input type="password" id="senha" placeholder="Senha">
+        <button onclick="fazerLogin()">Entrar</button>
     </div>
 
     <script>
-        function toggleSenha() {
-            const s = document.getElementById('senha');
-            s.type = (s.type === 'password') ? 'text' : 'password';
-        }
-
-        async function login() {
+        async function fazerLogin() {
             const user = document.getElementById('user').value;
             const senha = document.getElementById('senha').value;
-            
             const res = await fetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user, senha })
             });
-            
             const data = await res.json();
-            const token = data.token || data.accessToken;
-
-            if (token) {
-                localStorage.setItem('elefante_token', token);
-                document.getElementById('loginCard').style.display = 'none';
-                loadBooks();
-            } else {
-                alert('Erro: ' + (data.error || 'Dados inválidos'));
-            }
+            if (data.token || data.accessToken) {
+                localStorage.setItem('elefante_token', data.token || data.accessToken);
+                alert('Logado! Agora você pode buscar livros ou quizzes.');
+            } else { alert('Erro no login'); }
         }
 
-        async function loadBooks() {
+        // Exemplo de como buscar dados após logar:
+        async function buscarDados(tipo) {
             const token = localStorage.getItem('elefante_token');
-            const res = await fetch('/api/books', {
+            const res = await fetch(`/api/books?type=${tipo}`, {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
-            
-            const data = await res.json();
-            const books = data.readings || data || [];
-            const list = document.getElementById('booksList');
-            document.getElementById('booksSection').style.display = 'block';
-            
-            list.innerHTML = books.length ? '' : 'Nenhum livro encontrado.';
-            books.forEach(b => {
-                list.innerHTML += `<div class="book-card">${b.title || 'Livro sem título'}</div>`;
-            });
+            console.log(await res.json());
         }
     </script>
 </body>
